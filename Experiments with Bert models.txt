@@ -1,0 +1,294 @@
+python create_pretraining_data.py \   --input_file=./sample_text.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=C:\Users\mohiu\OneDrive\Documents\Thesis\uncased_L-12_H-768_A-12/vocab.txt \  --do_lower_case=True \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+
+
+
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretraining_output \  --do_train=True \  --do_eval=True \  --bert_config_file=$BERT_BASE_DIR/bert_config.json \  --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \  --train_batch_size=32 \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+
+
+
+#for HPC
+export TRAINED_CLASSIFIER=./bert_output/model.ckpt-[highest 
+export BERT_BASE_DIR=./uncased
+
+####for bert
+python create_pretraining_data.py \   --input_file=./sample_text.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=vocab.txt \  --do_lower_case=True \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretraining_output \  --do_train=True \  --do_eval=True \  --bert_config_file=bert_config.json \  --init_checkpoint=bert_model.ckpt \  --train_batch_size=32 \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+##glue dataset
+export BERT_BASE_DIR=/home/mabdulq/lakehead/thesis/uncased
+export GLUE_DIR=/home/mabdulq/lakehead/thesis/glue_data
+
+python run_classifier.py \
+  --task_name=cola \
+  --do_train=true \
+  --do_eval=true \
+  --data_dir=$GLUE_DIR/CoLA \
+  --vocab_file=$BERT_BASE_DIR/vocab.txt \
+  --bert_config_file=$BERT_BASE_DIR/bert_config.json \
+  --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \
+  --max_seq_length=128 \
+  --train_batch_size=32 \
+  --learning_rate=2e-5 \
+  --num_train_epochs=3.0 \
+  --output_dir=/tmp/mrpc_output/
+
+
+#####for biobert
+export MODELS=/home/mabdulq/lakehead/thesis/tweetBert/Models
+export OUTPUT=/home/mabdulq/lakehead/thesis/tweetBert/output
+export SAMPLE=/home/mabdulq/lakehead/thesis/biobert
+python create_pretraining_data.py \   --input_file=$SAMPLE/sample_text.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=$MODELS/vocab.txt \  --do_lower_case=True \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+#with checkpoint
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=$OUTPUT \  --do_train=True \  --do_eval=True \  --bert_config_file=$MODELS/bert_config.json \  --init_checkpoint=$MODELS/model.ckpt \  --train_batch_size=32 \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+#without checkpoint for running the first time
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretraining_output \  --do_train=True \  --do_eval=True \  --bert_config_file=bert_config.json \  --train_batch_size=32 \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+python create_pretraining_data.py \   --input_file=./bio_sample_text.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=vocab.txt \  --do_lower_case=True \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+##finetuning
+#NER
+export NER_DIR=./datasets/NER/NCBI-disease
+export OUTPUT_DIR=./ner_outputs
+python run_ner.py --do_train=true --do_eval=true --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-1000000 --num_train_epochs=10.0 --data_dir=$NER_DIR --output_dir=$OUTPUT_DIR
+python run_ner.py --do_train=false --do_predict=true --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-1000000 --num_train_epochs=10.0 --data_dir=$NER_DIR --output_dir=$OUTPUT_DIR
+
+#RE
+export RE_DIR=./datasets/RE/GAD/1
+export TASK_NAME=gad
+export OUTPUT_DIR=./re_outputs_1
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-1000000 --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+
+#QA
+export QA_DIR=./datasets/QA/BioASQ
+export OUTPUT_DIR=./qa_outputs
+python run_qa.py --do_train=True --do_predict=True --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-1000000 --max_seq_length=384 --train_batch_size=12 --learning_rate=5e-6 --doc_stride=128 --num_train_epochs=5.0 --do_lower_case=False --train_file=$QA_DIR/BioASQ-train-factoid-4b.json --predict_file=$QA_DIR/BioASQ-test-factoid-4b-1.json --output_dir=$OUTPUT_DIR
+
+
+####pretraining on twitter
+#####for biobert
+python create_pretraining_data.py \   --input_file=./sample_text.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=vocab.txt \  --do_lower_case=True \  --max_seq_length=283 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+#with checkpoint
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretrainingTwitter_output \  --do_train=True \  --do_eval=True \  --bert_config_file=bert_config.json \  --init_checkpoint=model.ckpt-0 \  --train_batch_size=32 \  --max_seq_length=283 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+#without checkpoint for running the first time
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretrainingTwitter_output \  --do_train=True \  --do_eval=True \  --bert_config_file=bert_config.json \  --train_batch_size=32 \  --max_seq_length=283 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+python create_pretraining_data.py \   --input_file=./2kTweets.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=vocab.txt \  --do_lower_case=True \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretraining_output \  --do_train=True \  --do_eval=True \  --bert_config_file=bert_config.json \  --init_checkpoint=bert_model.ckpt \  --train_batch_size=32 \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+python run_pretraining.py \  --input_file=tf_examples.tfrecord \  --output_dir=pretraining_output \  --do_train=True \  --do_eval=True \  --bert_config_file=bert_config.json \  --init_checkpoint=model.ckpt-20 \  --train_batch_size=32 \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --num_train_steps=20 \  --num_warmup_steps=10 \  --learning_rate=2e-5
+
+
+
+python create_pretraining_data.py \   --input_file=./bio_sample_text.txt \  --output_file=tf_examples.tfrecord \  --vocab_file=vocab.txt \  --do_lower_case=True \  --max_seq_length=128 \  --max_predictions_per_seq=20 \  --masked_lm_prob=0.15 \  --random_seed=12345 \  --dupe_factor=5
+
+
+
+
+
+
+
+export GLUE_DIR=/home/mabdulq/lakehead/thesis/bert
+python run_classifier.py \  --task_name=MRPC  \  --do_train=true \  --do_eval=true \  --data_dir=$GLUE_DIR/model \  --vocab_file=vocab.txt \  --bert_config_file=bert_config.json \  --init_checkpoint=bert_model.ckpt \  --max_seq_length=128 \  --train_batch_size=32 \  --learning_rate=2e-5 \  --num_train_epochs=3.0 \  --output_dir=/tmp/mrpc_output/
+
+
+python run_classifier.py \
+    --task_name=cola \
+    --do_train=true \
+    --do_eval=true \
+    --data_dir=\yelp_review_full_csv \
+    --vocab_file=vocab.txt \
+    --bert_config_file=bert_config.json \
+    --init_checkpoint=bert_model.ckpt \
+    --max_seq_length=128 \
+    --train_batch_size=32 \
+    --learning_rate=2e-5 \
+    --num_train_epochs=3.0 \
+    --output_dir=bertTwitterClassification_output\ 
+    --do_lower_case=True \
+    --save_checkpoints_steps 10000 \
+
+python run_classifier.py \
+  --task_name=cola \
+  --do_train=true \
+  --do_eval=true \
+  --data_dir=$GLUE_DIR/yelp_review_full_csv \
+  --vocab_file=vocab.txt \
+  --bert_config_file=bert_config.json \
+  --init_checkpoint=bert_model.ckpt \
+  --max_seq_length=128 \
+  --train_batch_size=32 \
+  --learning_rate=2e-5 \
+  --num_train_epochs=3.0 \
+  --output_dir=/home/mabdulq/lakehead/thesis/Others/Zainab
+
+
+export QA_DIR=./datasets/QA/BioASQ
+export OUTPUT_DIR=./qa_outputs
+python run_qa.py --do_train=True --do_predict=True --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-20 --max_seq_length=384 --train_batch_size=12 --learning_rate=5e-6 --doc_stride=128 --num_train_epochs=5.0 --do_lower_case=False --train_file=$QA_DIR/BioASQ-train-factoid-4b.json --predict_file=$QA_DIR/BioASQ-test-factoid-4b-1.json --output_dir=$OUTPUT_DIR
+python run_qa.py --do_train=false --do_predict=true --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-20 --max_seq_length=384 --train_batch_size=12 --learning_rate=5e-6 --doc_stride=128 --num_train_epochs=5.0 --do_lower_case=False --train_file=$QA_DIR/BioASQ-train-factoid-4b.json --predict_file=$QA_DIR/BioASQ-test-factoid-4b-1.json --output_dir=$OUTPUT_DIR
+
+export NER_DIR=./datasets/NER/NCBI-disease
+export OUTPUT_DIR=./ner_outputs
+python run_ner.py --do_train=true --do_eval=true --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-20 --num_train_epochs=10.0 --data_dir=$NER_DIR --output_dir=$OUTPUT_DIR
+python run_ner.py --do_train=false --do_predict=true --vocab_file=vocab.txt --bert_config_file=bert_config.json --init_checkpoint=model.ckpt-20 --num_train_epochs=10.0 --data_dir=$NER_DIR --output_dir=$OUTPUT_DIR
+
+
+
+
+#####for BioBert
+## GAD
+export BIOBERT_DIR=/home/mabdulq/lakehead/thesis/biobert
+export RE_DIR=./datasets/RE/GAD/1
+export TASK_NAME=gad
+export OUTPUT_DIR=./re_outputs_1
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=$BIOBERT_DIR/vocab.txt --bert_config_file=$BIOBERT_DIR/bert_config.json --init_checkpoint=$BIOBERT_DIR/model-20.ckpt --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+
+## CoLA
+export BIOBERT_DIR=/home/mabdulq/lakehead/thesis/biobert
+export RE_DIR=./datasets/RE/CoLA
+export TASK_NAME=cola
+export OUTPUT_DIR=./re_outputs_1_cola
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=$BIOBERT_DIR/vocab.txt --bert_config_file=$BIOBERT_DIR/bert_config.json --init_checkpoint=$BIOBERT_DIR/model.ckpt-1000000 --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+
+## MNLI
+export BIOBERT_DIR=/home/mabdulq/lakehead/thesis/biobert
+export RE_DIR=./datasets/RE/MNLI
+export TASK_NAME=mnli
+export OUTPUT_DIR=./outputs/biobert/re_outputs_1_mnli_biobert
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=$BIOBERT_DIR/vocab.txt --bert_config_file=$BIOBERT_DIR/bert_config.json --init_checkpoint=$BIOBERT_DIR/model.ckpt-1000000 --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+
+
+## mrpc
+export BIOBERT_DIR=/home/mabdulq/lakehead/thesis/biobert
+export RE_DIR=./datasets/RE/MRPC
+export TASK_NAME=mrpc
+export OUTPUT_DIR=./outputs/biobert/re_outputs_1_mrpc_biobert
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=$BIOBERT_DIR/vocab.txt --bert_config_file=$BIOBERT_DIR/bert_config.json --init_checkpoint=$BIOBERT_DIR/model.ckpt-1000000 --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+
+
+
+## euadr
+export BIOBERT_DIR=/home/mabdulq/lakehead/thesis/biobert
+export RE_DIR=./datasets/RE/euadr/8
+export TASK_NAME=euadr
+export OUTPUT_DIR=./outputs/biobert/re_outputs_1_euadr_biobert
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=$BIOBERT_DIR/vocab.txt --bert_config_file=$BIOBERT_DIR/bert_config.json --init_checkpoint=$BIOBERT_DIR/model.ckpt-1000000 --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+python ./biocodes/re_eval.py --output_path=$OUTPUT_DIR/test_results.tsv --answer_path=$RE_DIR/test.tsv
+
+
+#####for Scibert
+## GAD
+export BIOBERT_DIR=/home/mabdulq/lakehead/thesis/biobert
+export RE_DIR=./datasets/RE/GAD/1
+export TASK_NAME=gad
+export OUTPUT_DIR=./re_outputs_1
+export SCIBERT=/home/mabdulq/lakehead/thesis/
+python run_re.py --task_name=$TASK_NAME --do_train=true --do_eval=true --do_predict=true --vocab_file=$BIOBERT_DIR/vocab.txt --bert_config_file=$BIOBERT_DIR/bert_config.json --init_checkpoint=$BIOBERT_DIR/model-20.ckpt --max_seq_length=128 --train_batch_size=32 --learning_rate=2e-5 --num_train_epochs=3.0 --do_lower_case=false --data_dir=$RE_DIR --output_dir=$OUTPUT_DIR
+
+
+
+home/mabdulq/lakehead/thesis/scibert/output
+
+
+python -m albert.run_pretraining \
+    --input_file=/home/mabdulq/lakehead/thesis/albert/sample_text \
+    --output_dir=/home/mabdulq/lakehead/thesis/output/albert \
+    --albert_config_file=/home/mabdulq/lakehead/thesis/albertModel/bert_config.json \
+    --do_train \
+    --do_eval \
+    --train_batch_size=4096 \
+    --eval_batch_size=64 \
+    --max_seq_length=512 \
+    --max_predictions_per_seq=20 \
+    --optimizer='lamb' \
+    --learning_rate=.00176 \
+    --num_train_steps=125000 \
+    --num_warmup_steps=3125 \
+    --save_checkpoints_steps=5000
+
+
+
+
+
+
+export BERT_BASE_DIR=/home/mabdulq/lakehead/thesis/BertModels
+export GLUE_DIR=/home/mabdulq/lakehead/thesis/Others/Zainab
+
+python run_classifier.py \
+  --task_name=cola \
+  --do_train=true \
+  --do_eval=true \
+  --data_dir=$GLUE_DIR/CoLA \
+  --vocab_file=$BERT_BASE_DIR/vocab.txt \
+  --bert_config_file=$BERT_BASE_DIR/bert_config.json \
+  --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \
+  --max_seq_length=128 \
+  --train_batch_size=32 \
+  --learning_rate=2e-5 \
+  --num_train_epochs=3.0 \
+  --output_dir=/home/mabdulq/lakehead/thesis/Others/Zainab
+
+
+python run_classifier.py \
+  --task_name=cola \
+  --do_predict=true \
+  --data_dir=$GLUE_DIR/CoLA \
+  --vocab_file=$BERT_BASE_DIR/vocab.txt \
+  --bert_config_file=$BERT_BASE_DIR/bert_config.json \
+  --init_checkpoint=/home/mabdulq/lakehead/thesis/Others/Zainab/model.ckpt-417 \
+  --max_seq_length=128 \
+  --output_dir=/home/mabdulq/lakehead/thesis/Others/Zainab \
+
+
+
+
+
+
+
+
+python run_classifier.py \
+  --task_name=cola \
+  --do_predict=true \
+  --data_dir=$GLUE_DIR/CoLA \
+  --vocab_file=$BERT_BASE_DIR/vocab.txt \
+  --bert_config_file=$BERT_BASE_DIR/bert_config.json \
+  --init_checkpoint= /home/mabdulq/lakehead/thesis/Others/Zainab/model.ckpt-417 \
+  --max_seq_length=128 \
+  --output_dir=/home/mabdulq/lakehead/thesis/Others/Zainab \
+
+
+
+
+
+
+
+
+
+
+
+
+
+DaTALab2020!- plagscan 
