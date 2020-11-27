@@ -1,18 +1,18 @@
 # TweetBERT
-TweetBERT: A Pretrained Language Representation Model for Twitter Text Analysis 
+<b> <u>TweetBERT: A Pretrained Language Representation Model for Twitter Text Analysis </u> </b>
 
 
+TweetBERT is a domain specific language representation model trained on Twitter corpora for general Twitter text analysis.
 
 
+We will be releasing the TweetBERT models shortly.
+
+<b> Datasets for evaluation </b>
 
 
-
-
-
-
-
-
-Filters used when collecting tweets from <a href="https://twitter.datalab.science/">Twitter platform in DaTAlab</a>
+<b> Tweets Collection </b> <br>
+Platform: <a href="https://twitter.datalab.science/">Twitter platform in DaTAlab</a> <br>
+Filters used:
 <ul>
   <li>Fix misspellings</li>
   <li>Remove hashtags</li>
