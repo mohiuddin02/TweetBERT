@@ -8,7 +8,7 @@ TweetBERT is a domain specific language representation model trained on Twitter 
 We will be releasing the TweetBERT models shortly.
 
 <b> Datasets for evaluation </b>
-
+Releasing soon
 
 <b> Tweets Collection </b> <br>
 Platform: <a href="https://twitter.datalab.science/">Twitter platform in DaTAlab</a> <br>
