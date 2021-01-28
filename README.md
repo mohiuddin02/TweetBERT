@@ -21,3 +21,4 @@ Filters used:
   <li>Remove mentions</li>
   <li>Expand acronyms</li>
 </ul>
+Please email at mabdulq@lakeheadu.ca for more information or resources.
