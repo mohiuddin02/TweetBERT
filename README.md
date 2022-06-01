@@ -1,11 +1,11 @@
 # TweetBERT
-<b> <u> <a href="https://arxiv.org/abs/2010.11091">TweetBERT: A Pretrained Language Representation Model for Twitter Text Analysis</a> </u> </b>
+<b> <u> <a href="https://www.researchgate.net/publication/344802362_TweetBERT_A_Pretrained_Language_Representation_Model_for_Twitter_Text_Analysis">TweetBERT: A Pretrained Language Representation Model for Twitter Text Analysis</a> </u> </b>
 
 
 TweetBERT is a domain specific language representation model trained on Twitter corpora for general Twitter text analysis.
 
 
-We will be releasing the TweetBERT models shortly.
+We are releasing the TweetBERT <a href="https://drive.google.com/drive/folders/1CiyQNUFzfcb_9buCKkeYhOa6wg0jSiuc?usp=sharing">models</a> <br>.
 
 <b> Datasets for evaluation </b>
 Releasing soon
@@ -21,4 +21,6 @@ Filters used:
   <li>Remove mentions</li>
   <li>Expand acronyms</li>
 </ul>
+
+
 Please email at mabdulq@lakeheadu.ca for more information or resources.
